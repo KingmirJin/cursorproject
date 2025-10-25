@@ -28,8 +28,29 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS配置
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://your-app-name.vercel.app',
+    'https://your-app-name.railway.app',
+    'https://your-app-name.netlify.app'
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: function (origin, callback) {
+        // 允许没有origin的请求（如移动应用）
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            // 在生产环境中，允许所有来源（可以根据需要调整）
+            if (process.env.NODE_ENV === 'production') {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        }
+    },
     credentials: true
 }));
 
